@@ -112,7 +112,7 @@ a {
 }
 
 .hero-copy {
-  width: min(760px, 100%);
+  width: min(960px, 100%);
 }
 
 .eyebrow,
@@ -146,9 +146,12 @@ h3 {
 
 h1 {
   margin: 0;
-  font-size: clamp(4.4rem, 14vw, 10.5rem);
+  max-width: 100%;
+  font-size: clamp(4.4rem, 11vw, 10.2rem);
   line-height: 0.86;
   font-weight: 700;
+  overflow-wrap: normal;
+  white-space: nowrap;
 }
 
 h2 {
@@ -645,7 +648,7 @@ h3 {
   }
 
   h1 {
-    font-size: clamp(3.5rem, 24vw, 5.6rem);
+    font-size: clamp(3.15rem, 18vw, 5.6rem);
   }
 
   .hero {
