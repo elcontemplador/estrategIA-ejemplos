@@ -176,6 +176,16 @@ h3 {
   line-height: 1.2;
 }
 
+.hero-context {
+  max-width: 690px;
+  margin: 18px 0 0;
+  padding-left: 16px;
+  border-left: 4px solid #f1d9bd;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: clamp(1rem, 1.5vw, 1.18rem);
+  line-height: 1.45;
+}
+
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
