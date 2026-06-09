@@ -1,61 +1,184 @@
-const patternOutput = document.querySelector("[data-pattern-output]");
-const patternTokens = Array.from(document.querySelectorAll("[data-pattern-demo] .pattern-token"));
+const revealItems = document.querySelectorAll(".reveal");
 
-const patternMessages = {
-  texto: "Con textos puede resumir, clasificar documentos, redactar borradores o extraer argumentos.",
-  imagen: "Con imágenes puede reconocer elementos visuales, describir escenas o detectar patrones gráficos.",
-  numero: "Con datos numericos puede estimar tendencias, detectar anomalias o comparar escenarios.",
-  codigo: "Con instrucciones y codigo puede automatizar tareas y ayudar a construir herramientas digitales.",
-  mixto: "Al combinar formatos aparece la IA multimodal: texto, imágenes, datos y herramientas en un mismo flujo."
-};
-
-patternTokens.forEach((button) => {
-  button.addEventListener("click", () => {
-    button.classList.toggle("is-active");
-    const activeKinds = new Set(
-      patternTokens.filter((item) => item.classList.contains("is-active")).map((item) => item.dataset.kind)
-    );
-
-    if (activeKinds.size === 0) {
-      patternOutput.textContent = "Elige varios ejemplos para ver qué tarea podría aprender.";
-      return;
-    }
-
-    if (activeKinds.size > 1) {
-      patternOutput.textContent = patternMessages.mixto;
-      return;
-    }
-
-    patternOutput.textContent = patternMessages[[...activeKinds][0]];
-  });
-});
-
-const promptData = {
-  vago: {
-    text: "Explicame la IA.",
-    response: "El modelo puede responder de forma genérica, larga o poco adaptada. Falta objetivo, público, formato y criterio."
+const revealObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+      }
+    });
   },
-  util: {
-    text: "Explica qué es la IA a una persona sin conocimientos técnicos en 5 párrafos breves.",
-    response: "La respuesta mejora: tiene público, extensión y nivel. Aún podría faltar el enfoque o el uso que se espera del texto."
+  { threshold: 0.14 }
+);
+
+revealItems.forEach((item) => revealObserver.observe(item));
+
+const completionData = {
+  cielo: {
+    fragment: "El cielo es...",
+    options: [
+      ["azul", 78, "#6aa1b8"],
+      ["gris", 14, "#adaeb0"],
+      ["inmenso", 8, "#c39a57"]
+    ]
   },
-  institucional: {
-    text: "Explica qué es la IA para cargos públicos y equipos de comunicación. Usa lenguaje claro, distingue usos y riesgos, y cierra con una checklist de decisión.",
-    response: "El modelo recibe contexto, destinatario, tono, estructura y criterio. La salida será más útil y más fácil de revisar."
+  ayuntamiento: {
+    fragment: "Un ayuntamiento puede usar IA para...",
+    options: [
+      ["resumir expedientes", 46, "#6aa1b8"],
+      ["orientar consultas", 34, "#59614c"],
+      ["decidir sanciones", 20, "#9d2235"]
+    ]
+  },
+  campana: {
+    fragment: "En una campaña electoral, la IA puede...",
+    options: [
+      ["analizar discursos", 42, "#6aa1b8"],
+      ["probar mensajes", 37, "#c39a57"],
+      ["fabricar certezas", 21, "#9d2235"]
+    ]
   }
 };
 
-const promptButtons = Array.from(document.querySelectorAll("[data-prompt]"));
-const promptText = document.querySelector("[data-prompt-text]");
-const promptResponse = document.querySelector("[data-prompt-response]");
+const completionSelect = document.querySelector("[data-completion-select]");
+const completionFragment = document.querySelector("[data-completion-fragment]");
+const probabilityList = document.querySelector("[data-probability-list]");
 
-promptButtons.forEach((button) => {
+function renderCompletion(key) {
+  const data = completionData[key];
+  completionFragment.textContent = data.fragment;
+  probabilityList.innerHTML = data.options
+    .map(
+      ([label, value, color]) => `
+        <div class="prob-row">
+          <strong>${label}</strong>
+          <div class="prob-track"><span style="width: ${value}%; background: ${color}"></span></div>
+          <span>${value}%</span>
+        </div>
+      `
+    )
+    .join("");
+}
+
+if (completionSelect) {
+  renderCompletion(completionSelect.value);
+  completionSelect.addEventListener("change", () => renderCompletion(completionSelect.value));
+}
+
+const flowData = {
+  reactivo: {
+    caption:
+      "Un flujo reactivo transforma una pregunta en una respuesta. Es útil, pero deja al usuario casi todo el trabajo de verificación y ejecución.",
+    steps: [
+      ["entrada", "El usuario pregunta."],
+      ["modelo", "El sistema genera una respuesta."],
+      ["salida", "La persona revisa, corrige y decide qué hacer."]
+    ]
+  },
+  agentico: {
+    caption:
+      "Un flujo agéntico supervisado divide el problema, usa herramientas y deja puntos de control. No elimina la responsabilidad humana: la hace más explícita.",
+    steps: [
+      ["objetivo", "Define la tarea y los límites."],
+      ["plan", "Divide el trabajo en pasos."],
+      ["herramientas", "Consulta documentos, datos o sistemas autorizados."],
+      ["verificación", "Contrasta el resultado y detecta huecos."],
+      ["entrega", "Propone una salida revisable por una persona."]
+    ]
+  }
+};
+
+const flowButtons = document.querySelectorAll("[data-flow]");
+const flowVisual = document.querySelector("[data-flow-visual]");
+const flowCaption = document.querySelector("[data-flow-caption]");
+
+function renderFlow(key) {
+  const data = flowData[key];
+  flowVisual.innerHTML = data.steps
+    .map(
+      ([title, copy]) => `
+        <article class="flow-step">
+          <span>${title}</span>
+          <p>${copy}</p>
+        </article>
+      `
+    )
+    .join("");
+  flowCaption.textContent = data.caption;
+}
+
+if (flowVisual) {
+  renderFlow("reactivo");
+  flowButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      flowButtons.forEach((item) => item.classList.remove("is-active"));
+      button.classList.add("is-active");
+      renderFlow(button.dataset.flow);
+    });
+  });
+}
+
+const promptBlocks = {
+  rol: "Actúa como asesor de políticas públicas.",
+  tarea: "Resume el documento y extrae las decisiones pendientes.",
+  contexto: "El texto se usará en una reunión de equipo municipal.",
+  limites: "No inventes datos y marca cualquier punto no confirmado.",
+  formato: "Entrega 5 viñetas y una tabla de riesgos.",
+  criterio: "Prioriza claridad, trazabilidad y utilidad para decidir."
+};
+
+const blockButtons = document.querySelectorAll("[data-block]");
+const assembledPrompt = document.querySelector("[data-assembled-prompt]");
+const promptScore = document.querySelector("[data-prompt-score]");
+const promptDiagnosis = document.querySelector("[data-prompt-diagnosis]");
+const activeBlocks = new Set();
+
+function renderPrompt() {
+  const parts = [...activeBlocks].map((key) => promptBlocks[key]);
+  promptScore.textContent = `${parts.length}/6`;
+  assembledPrompt.textContent = parts.length
+    ? parts.join(" ")
+    : "Pulsa bloques para construir una instrucción de trabajo.";
+  if (parts.length < 3) {
+    promptDiagnosis.textContent =
+      "Todavía es un encargo débil: el modelo tendrá que adivinar contexto, límites o formato.";
+  } else if (parts.length < 6) {
+    promptDiagnosis.textContent =
+      "Ya es una instrucción útil. Añadir límites y criterio mejora la revisión humana.";
+  } else {
+    promptDiagnosis.textContent =
+      "Encargo completo: define rol, tarea, contexto, límites, formato y criterio de calidad.";
+  }
+}
+
+blockButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    promptButtons.forEach((item) => item.classList.remove("is-active"));
+    const key = button.dataset.block;
+    if (activeBlocks.has(key)) {
+      activeBlocks.delete(key);
+      button.classList.remove("is-active");
+    } else {
+      activeBlocks.add(key);
+      button.classList.add("is-active");
+    }
+    renderPrompt();
+  });
+});
+
+const hallucinationButtons = document.querySelectorAll("[data-claim]");
+const hallucinationFeedback = document.querySelector("[data-hallucination-feedback]");
+
+hallucinationButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    hallucinationButtons.forEach((item) => item.classList.remove("is-active"));
     button.classList.add("is-active");
-    const data = promptData[button.dataset.prompt];
-    promptText.textContent = data.text;
-    promptResponse.textContent = data.response;
+    if (button.dataset.claim === "hallucination") {
+      hallucinationFeedback.textContent =
+        "Bien detectado: el texto introduce una obligación semanal y una fecha concreta sin fuente. Es el tipo de detalle plausible que debe verificarse antes de publicarse o aplicarse.";
+    } else {
+      hallucinationFeedback.textContent =
+        "Esa parte puede necesitar contexto, pero no es la señal más sospechosa. Busca cifras, fechas, obligaciones absolutas o afirmaciones legales formuladas con demasiada seguridad.";
+    }
   });
 });
 
@@ -64,26 +187,30 @@ const riskData = {
     title: "Riesgo bajo",
     copy: "Buen caso para acelerar trabajo si no incluye datos sensibles y una persona revisa el resultado.",
     width: "28%",
-    color: "#59614c"
+    color: "#59614c",
+    controls: ["Revisión humana", "No introducir información sensible", "Trazabilidad mínima"]
   },
   medio: {
     title: "Riesgo medio",
-    copy: "Necesita tono adecuado, revisión humana, trazabilidad y cuidado con datos personales o respuestas automatizadas.",
+    copy: "Conviene definir tono, fuentes, registro de decisiones y límites claros antes de desplegarlo.",
     width: "62%",
-    color: "#c39a57"
+    color: "#c39a57",
+    controls: ["Base documental aprobada", "Registro de respuestas", "Circuito de escalado humano"]
   },
   alto: {
     title: "Riesgo alto",
-    copy: "Debe tratarse como una decisión sensible: requiere controles, auditoría, responsables claros y garantías para las personas afectadas.",
+    copy: "Debe tratarse como una decisión sensible: requiere garantías, auditoría y responsables identificables.",
     width: "94%",
-    color: "#9d2235"
+    color: "#9d2235",
+    controls: ["Evaluación previa", "Auditoría", "Explicación a personas afectadas", "Supervisión reforzada"]
   }
 };
 
-const riskButtons = Array.from(document.querySelectorAll("[data-risk]"));
+const riskButtons = document.querySelectorAll("[data-risk]");
 const riskFill = document.querySelector("[data-risk-fill]");
 const riskTitle = document.querySelector("[data-risk-title]");
 const riskCopy = document.querySelector("[data-risk-copy]");
+const riskControls = document.querySelector("[data-risk-controls]");
 
 riskButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -94,25 +221,25 @@ riskButtons.forEach((button) => {
     riskFill.style.background = data.color;
     riskTitle.textContent = data.title;
     riskCopy.textContent = data.copy;
+    riskControls.innerHTML = data.controls.map((item) => `<li>${item}</li>`).join("");
   });
 });
 
-const mapMessages = {
-  datos: "Sin datos adecuados no hay sistema fiable. En el sector público, además, los datos exigen legitimidad, calidad y protección.",
-  infraestructura: "La capacidad de computación, nube y conectividad condiciona quién puede entrenar, desplegar o controlar sistemas avanzados.",
-  regulacion: "Las reglas determinan usos permitidos, responsabilidades, transparencia, supervisión y garantías para la ciudadanía.",
-  talento: "La adopción real depende de perfiles capaces de traducir problemas institucionales en sistemas útiles y gobernables.",
-  servicios: "La IA puede redisenar tramites, atencion ciudadana y gestion interna, pero debe preservar derechos y control humano.",
-  comunicacion: "La IA acelera producción, análisis y segmentación de mensajes. También aumenta la necesidad de criterio, verificación y confianza."
-};
-
-const mapButtons = Array.from(document.querySelectorAll("[data-node]"));
-const mapNote = document.querySelector("[data-map-note]");
-
-mapButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    mapButtons.forEach((item) => item.classList.remove("is-active"));
-    button.classList.add("is-active");
-    mapNote.textContent = mapMessages[button.dataset.node];
+document.querySelectorAll(".flashcard").forEach((card) => {
+  card.addEventListener("click", () => {
+    card.classList.toggle("is-active");
   });
 });
+
+const checklist = document.querySelector("[data-checklist]");
+const checklistProgress = document.querySelector("[data-checklist-progress]");
+
+if (checklist) {
+  const boxes = checklist.querySelectorAll("input[type='checkbox']");
+  const updateChecklist = () => {
+    const done = [...boxes].filter((box) => box.checked).length;
+    checklistProgress.textContent = `${done} de ${boxes.length} preguntas marcadas`;
+  };
+  boxes.forEach((box) => box.addEventListener("change", updateChecklist));
+  updateChecklist();
+}
