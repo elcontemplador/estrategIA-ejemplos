@@ -93,6 +93,10 @@ select {
   color: var(--burgundy);
 }
 
+.site-nav-minimal a {
+  font-weight: 800;
+}
+
 .nav-cta,
 .button {
   display: inline-flex;
@@ -917,10 +921,6 @@ h3 {
 }
 
 @media (max-width: 640px) {
-  .nav-cta {
-    display: none;
-  }
-
   .brand img {
     width: 138px;
   }
